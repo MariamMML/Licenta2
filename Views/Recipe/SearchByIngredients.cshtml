@@ -1,0 +1,28 @@
+﻿@model IEnumerable<Licenta2.Models.ModelRecipe>
+
+<h2>Recipes Matching Your Ingredients</h2>
+
+@if (!Model.Any())
+{
+    <p>No recipes found with the given ingredients.</p>
+}
+else
+{
+    <ul>
+        @foreach (var recipe in Model)
+        {
+            <li>
+                <h3>@recipe.RecipeName</h3>
+                <p>@recipe.Instructions</p>
+
+                <strong>Ingredients:</strong>
+                <ul>
+                    @foreach (var ingredient in recipe.Ingredients)
+                    {
+                        <li>@ingredient.Name</li> <!-- Assuming each Ingredient has a 'Name' property -->
+                    }
+                </ul>
+            </li>
+        }
+    </ul>
+}

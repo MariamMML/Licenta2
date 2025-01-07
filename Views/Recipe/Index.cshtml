@@ -1,0 +1,41 @@
+﻿@model IEnumerable<Licenta2.Models.ModelRecipe>
+
+@{
+    ViewData["Title"] = "Recipes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Recipes</h1>
+
+<form asp-action="Search" method="get">
+    <input type="text" name="searchTerm" placeholder="Search recipes..." />
+    <input type="submit" value="Search" />
+</form>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Recipe</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.RecipeName</td>
+                <td>@item.Instructions</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.RecipeId" class="btn btn-warning">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.RecipeId" class="btn btn-info">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.RecipeId" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

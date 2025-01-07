@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Licenta2.Models.ModelMealPlanner>
+
+@{
+    ViewData["Title"] = "My Meal Plans";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Meal Plan</th>
+            <th>Entries</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var plan in Model)
+        {
+            <tr>
+                <td>Plan @plan.Id</td>
+                <td>
+                    <ul>
+                        @foreach (var entry in plan.Entries)
+                        {
+                            <li>@entry.Date.ToShortDateString() - @entry.MealType: @entry.Recipe.RecipeName</li>
+                        }
+                    </ul>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@plan.Id">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@plan.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-primary">Create New Meal Plan</a>

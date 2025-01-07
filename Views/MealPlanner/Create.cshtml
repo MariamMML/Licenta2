@@ -1,0 +1,31 @@
+﻿@model Licenta2.Models.ModelMealPlanner
+
+@{
+    ViewData["Title"] = "Create Meal Plan";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label for="dates">Date</label>
+        <input type="date" name="dates" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="recipeIds">Recipe</label>
+        <select name="recipeIds" class="form-control" required>
+            @foreach (var recipe in ViewBag.Recipes)
+            {
+                <option value="@recipe.RecipeId">@recipe.RecipeName</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="mealTypes">Meal Type</label>
+        <input type="text" name="mealTypes" class="form-control" placeholder="e.g., Breakfast, Lunch, Dinner" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Meal Plan</button>
+</form>

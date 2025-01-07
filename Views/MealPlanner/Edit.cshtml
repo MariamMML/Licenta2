@@ -1,0 +1,35 @@
+﻿@model Licenta2.Models.ModelMealPlanner
+
+@{
+    ViewData["Title"] = "Edit Meal Plan";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Edit" method="post">
+    <div class="form-group">
+        <label for="dates">Date</label>
+        <input type="date" name="dates" class="form-control" value="@Model.Entries.FirstOrDefault()?.Date.ToString("yyyy-MM-dd")" required />
+    </div>
+    <<div class="form-group">
+        <label for="recipeIds">Recipe</label>
+        <select name="recipeIds" class="form-control" required> 
+            @foreach (var recipe in ViewBag.Recipes)
+            {
+                var isSelected = Model.Entries.FirstOrDefault()?.RecipeId == recipe.Id;
+
+                <option value="@recipe.Id" selected="@(isSelected ? "selected" : null)">
+                    @recipe.RecipeName
+                </option>
+            }
+        </select>
+    </div>
+
+
+    <div class="form-group">
+        <label for="mealTypes">Meal Type</label>
+        <input type="text" name="mealTypes" class="form-control" value="@Model.Entries.FirstOrDefault()?.MealType" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Meal Plan</button>
+</form>

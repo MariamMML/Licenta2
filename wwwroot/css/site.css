@@ -1,0 +1,17 @@
+/* Ensure full height for the page */
+html, body {
+    height: 100%; /* Take up the full height of the viewport */
+    margin: 0;    /* Remove default margins */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main content grows to fill available space */
+main {
+    flex: 1;
+}
+
+/* Footer will be placed at the bottom */
+footer {
+    margin-top: auto; /* Push the footer to the bottom */
+}

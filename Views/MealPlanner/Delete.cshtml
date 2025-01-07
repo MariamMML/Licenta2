@@ -1,0 +1,25 @@
+﻿@model Licenta2.Models.ModelMealPlanner
+
+@{
+    ViewData["Title"] = "Delete Meal Plan";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<h3>Are you sure you want to delete this meal plan?</h3>
+
+<div>
+    <h4>Meal Plan @Model.Id</h4>
+    <ul>
+        @foreach (var entry in Model.Entries)
+        {
+            <li>@entry.Date.ToShortDateString() - @entry.MealType: @entry.Recipe.RecipeName</li>
+        }
+    </ul>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

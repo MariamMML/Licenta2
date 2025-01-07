@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"] - ProCook</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/site.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <img src="/images/logo.png" alt="YourAppName Logo" class="d-inline-block align-text-top" style="height: 40px; width: auto;">
+                <B>ProCook</B>
+            </a>
+           
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Recipe" asp-action="Index">Recipes</a>
+                    </li>
+
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="AdminManagement" asp-action="Index">Admin Panel</a>
+                        </li>
+                    }
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="MealPlanner" asp-action="Index">Meal Planners</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="MealPlanner" asp-action="Create">Create Meal Planner</a>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" style="display:inline;">
+                                <a href="javascript:void(0);" class="nav-link" onclick="document.getElementById('logoutForm').submit();">Logout</a>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Search Form -->
+        <form asp-controller="Recipe" asp-action="SearchByIngredients" method="get" class="d-flex align-items-center my-3 container">
+            <label for="ingredients" class="me-2">Search by Ingredients:</label>
+            <input type="text" name="ingredients" id="ingredients" class="form-control me-2" placeholder="Enter ingredients separated by commas" />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3">
+        <p>&copy; 2023 - <strong>ProCook</strong></p>
+    </footer>
+
+    <!-- Scripts -->
+    @RenderSection("Scripts", required: false)
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js"></script>
+</body>
+</html>
