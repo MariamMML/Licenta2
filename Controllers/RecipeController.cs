@@ -24,23 +24,52 @@ namespace Licenta2.Controllers
         }
 
         [Authorize]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        
 
         // POST: Recipe/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize]
-        public IActionResult Create([Bind("RecipeName,Instructions,Ingredients")] ModelRecipe recipe)
+        public async Task<IActionResult> Create([Bind("RecipeName,Instructions,Ingredients")] ModelRecipe recipe, IFormFile imageFile)
         {
+            if (!ModelState.IsValid)
+            {
+                // Log validation errors
+                foreach (var state in ModelState)
+                {
+                    Console.WriteLine($"Key: {state.Key}");
+                    foreach (var error in state.Value.Errors)
+                    {
+                        Console.WriteLine($"Error: {error.ErrorMessage}");
+                    }
+                }
+                // Return the view with the current model to display validation messages
+                return View(recipe);
+            }
+
             if (ModelState.IsValid)
             {
+                if (imageFile != null && imageFile.Length > 0)
+                {
+
+                    Console.WriteLine("File received: " + imageFile.FileName);
+                    Console.WriteLine("File size: " + imageFile.Length);
+                    // Save the image to wwwroot/images/recipes
+                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/recipes");
+                    Directory.CreateDirectory(uploads); // Ensure the directory exists
+                    var filePath = Path.Combine(uploads, Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+
+                    recipe.ImagePath = "/images/recipes/" + Path.GetFileName(filePath);
+                    Console.WriteLine("Image saved to: " + filePath); // Log where it's saved
+                }
+
                 _context.Add(recipe);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             return View(recipe);
         }
         public IActionResult Search(string query)
@@ -170,14 +199,5 @@ namespace Licenta2.Controllers
 
 
 
-        //public IActionResult Search(string[] ingredients)
-        //{
-        //    var recipes = _context.Recipes
-        //                          .Where(r => r.Ingredients
-        //                          .Any(i => ingredients.Contains(i.Name)))
-        //                          .ToList();
-
-        //    return View(recipes);
-        //}
     }
 }

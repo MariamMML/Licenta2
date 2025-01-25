@@ -10,9 +10,10 @@ namespace Licenta2.Models
         public string RecipeName { get; set; }
         public List<ModelIngredient> Ingredients { get; set; }
         public string Instructions { get; set; }
-        // Alte proprietăți după nevoie
 
-        // Constructor pentru a inițializa lista de ingrediente
+        public string? ImagePath { get; set; }
+
+
         public ModelRecipe()
         {
             Ingredients = new List<ModelIngredient>();

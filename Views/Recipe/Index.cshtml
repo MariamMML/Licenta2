@@ -7,35 +7,76 @@
 
 <h1>Recipes</h1>
 
-<form asp-action="Search" method="get">
-    <input type="text" name="searchTerm" placeholder="Search recipes..." />
-    <input type="submit" value="Search" />
+<!-- Search Form -->
+<form asp-action="Search" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchTerm" placeholder="Search recipes..." class="form-control" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
 </form>
 
+<!-- Create New Recipe Button -->
 <p>
-    <a asp-action="Create" class="btn btn-primary">Create New Recipe</a>
+    <a asp-action="Create" class="btn btn-success">Create New Recipe</a>
 </p>
 
-<table class="table">
+<!-- Recipes Table -->
+<table class="table table-striped">
     <thead>
         <tr>
+            <th>Image</th>
             <th>Name</th>
             <th>Description</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @if (!Model.Any())
         {
             <tr>
-                <td>@item.RecipeName</td>
-                <td>@item.Instructions</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.RecipeId" class="btn btn-warning">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.RecipeId" class="btn btn-info">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.RecipeId" class="btn btn-danger">Delete</a>
-                </td>
+                <td colspan="4" class="text-center">No recipes found.</td>
             </tr>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <!-- Recipe Image -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                        {
+                            <img src="@item.ImagePath" alt="Recipe Image" style="max-height: 100px; max-width: 100px;" />
+                        }
+                        else
+                        {
+                            <span>No image</span>
+                        }
+                    </td>
+
+                    <!-- Recipe Name -->
+                    <td>@item.RecipeName</td>
+
+                    <!-- Recipe Description -->
+                    <td>
+                        @if (string.IsNullOrEmpty(item.Instructions))
+                        {
+                            <span>No description provided.</span>
+                        }
+                        else
+                        {
+                            @item.Instructions
+                        }
+                    </td>
+
+                    <!-- Action Buttons -->
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.RecipeId" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-action="Details" asp-route-id="@item.RecipeId" class="btn btn-info btn-sm">Details</a>
+                        <a asp-action="Delete" asp-route-id="@item.RecipeId" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>
