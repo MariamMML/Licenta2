@@ -26,7 +26,7 @@
         <tr>
             <th>Image</th>
             <th>Name</th>
-            <th>Description</th>
+            <th>Category</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -59,13 +59,13 @@
 
                     <!-- Recipe Description -->
                     <td>
-                        @if (string.IsNullOrEmpty(item.Instructions))
+                        @if (string.IsNullOrEmpty(item.Category))
                         {
-                            <span>No description provided.</span>
+                            <span>No category assigned.</span>
                         }
                         else
                         {
-                            @item.Instructions
+                            @item.Category
                         }
                     </td>
 

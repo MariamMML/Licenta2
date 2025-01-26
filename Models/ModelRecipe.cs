@@ -13,7 +13,10 @@ namespace Licenta2.Models
 
         public string? ImagePath { get; set; }
 
+        [Required(ErrorMessage = "Please select a category")]
+        public string Category { get; set; }
 
+        public string? CreatedBy { get; set; }
         public ModelRecipe()
         {
             Ingredients = new List<ModelIngredient>();

@@ -16,6 +16,13 @@ namespace Licenta2.Controllers
         {
             _context = context;
         }
+        private static readonly List<string> HardcodedCategories = new()
+        {
+        "Breakfast",
+        "Lunch",
+        "Dessert",
+        "Beverage"
+        };
 
         // GET: Recipe
         public IActionResult Index()
@@ -23,12 +30,33 @@ namespace Licenta2.Controllers
             return View(_context.Recipes.ToList());
         }
 
-        [Authorize]
-        
 
-        // POST: Recipe/Create
-        public async Task<IActionResult> Create([Bind("RecipeName,Instructions,Ingredients")] ModelRecipe recipe, IFormFile imageFile)
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult Create()
         {
+            ViewBag.Categories = HardcodedCategories;
+            return View(new ModelRecipe());
+        }
+        [HttpPost]
+        [Authorize]
+
+        [Authorize]
+        // POST: Recipe/Create
+        public async Task<IActionResult> Create([Bind("RecipeName,Instructions,Ingredients, Category")] ModelRecipe recipe, IFormFile imageFile)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                recipe.CreatedBy = User.Identity.Name;
+            }
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Categories = HardcodedCategories;
+                return View(recipe);
+            }
+            // Assign the email address of the logged-in user
+            
             if (!ModelState.IsValid)
             {
                 // Log validation errors
@@ -116,71 +144,143 @@ namespace Licenta2.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // Retrieve the recipe with its ingredients
             var recipe = await _context.Recipes
-                .Include(r => r.Ingredients) // Ensure you load the ingredients
-                .FirstOrDefaultAsync(r => r.RecipeId == id);
+        .Include(r => r.Ingredients)
+        .FirstOrDefaultAsync(r => r.RecipeId == id);
 
-            if (recipe != null)
-            {
-                // Remove associated ingredients first
-                _context.Ingredients.RemoveRange(recipe.Ingredients);
-
-                // Now remove the recipe
-                _context.Recipes.Remove(recipe);
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Recipe/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var recipe = await _context.Recipes
-         .Include(r => r.Ingredients) // Include Ingredients here
-         .FirstOrDefaultAsync(r => r.RecipeId == id);
             if (recipe == null)
             {
                 return NotFound();
             }
 
+            var currentUser = User.Identity.Name; // Email of the logged-in user
+            var isAdmin = User.IsInRole("Admin"); // Check if the user is in the Admin role
+
+            // Allow deletion only if the user is the creator or an admin
+            if (recipe.CreatedBy != currentUser && !isAdmin)
+            {
+                return Forbid(); // Return 403 Forbidden
+            }
+
+            // Remove associated ingredients first
+            _context.Ingredients.RemoveRange(recipe.Ingredients);
+
+            // Remove the recipe
+            _context.Recipes.Remove(recipe);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+        // GET: Recipe/Edit/5
+        [Authorize]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var recipe = await _context.Recipes
+                .Include(r => r.Ingredients) // Include related ingredients
+                .FirstOrDefaultAsync(r => r.RecipeId == id);
+
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+            ViewBag.Categories = HardcodedCategories;
+
             return View(recipe);
         }
+
 
         // POST: Recipe/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("RecipeId,RecipeName,Instructions,Ingredients")] ModelRecipe recipe)
+        [Authorize]
+        public async Task<IActionResult> Edit(int id, [Bind("RecipeId,RecipeName,Instructions,Ingredients,Category,ImagePath,CreatedBy")] ModelRecipe recipe, IFormFile imageFile)
         {
             if (id != recipe.RecipeId)
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(recipe);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Recipes.Any(r => r.RecipeId == id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return View(recipe); // Return view with validation errors
             }
 
-            return View(recipe);
+            // Retrieve the existing recipe from the database
+            var existingRecipe = await _context.Recipes
+                .Include(r => r.Ingredients)
+                .FirstOrDefaultAsync(r => r.RecipeId == id);
+
+            if (existingRecipe == null)
+            {
+                return NotFound();
+            }
+
+            // Update the recipe details
+            existingRecipe.RecipeName = recipe.RecipeName;
+            existingRecipe.Instructions = recipe.Instructions;
+
+            // Handle image replacement
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                // Save the new image
+                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/recipes");
+                Directory.CreateDirectory(uploads); // Ensure the directory exists
+                var filePath = Path.Combine(uploads, Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fileStream);
+                }
+
+                // Delete the old image file if it exists
+                if (!string.IsNullOrEmpty(existingRecipe.ImagePath))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingRecipe.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                // Update the image path
+                existingRecipe.ImagePath = "/images/recipes/" + Path.GetFileName(filePath);
+            }
+
+            // Update ingredients
+            _context.Ingredients.RemoveRange(existingRecipe.Ingredients); // Remove old ingredients
+            if (recipe.Ingredients != null)
+            {
+                foreach (var ingredient in recipe.Ingredients)
+                {
+                    existingRecipe.Ingredients.Add(new ModelIngredient
+                    {
+                        Name = ingredient.Name,
+                        Quantity = ingredient.Quantity,
+                        Weight = ingredient.Weight
+                    });
+                }
+            }
+
+            // Save the changes
+            try
+            {
+                _context.Update(existingRecipe);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Recipes.Any(r => r.RecipeId == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
         }
+
 
         public async Task<IActionResult> Details(int id)
         {

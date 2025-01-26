@@ -23,11 +23,26 @@
                 <span asp-validation-for="Instructions" class="text-danger"></span>
             </div>
 
+            <!-- Category Dropdown -->
+            <div class="form-group">
+                <label asp-for="Category" class="control-label">Category</label>
+                <select asp-for="Category" class="form-control">
+                    <option value="" disabled>Select a category</option>
+                    @foreach (var category in ViewBag.Categories as List<string>)
+                    {
+                        <option value="@category" selected="@(category == Model.Category ? "selected" : null)">@category</option>
+                    }
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            <!-- Image Upload -->
             <div class="form-group">
                 <label>Upload Recipe Image</label>
                 <input type="file" name="imageFile" class="form-control" />
             </div>
 
+            <!-- Ingredients Section -->
             <h4>Ingredients</h4>
             <div id="ingredients-container">
                 <!-- Dynamically generated ingredient fields will go here -->
@@ -51,22 +66,24 @@
     <script>
         let ingredientIndex = 0;
 
+        // Function to dynamically add ingredient fields
         function addIngredient() {
             const container = document.getElementById('ingredients-container');
             const ingredientHtml = `
-                                <div class="form-group">
-                                    <label>Ingredient Name</label>
-                                    <input name="Ingredients[${ingredientIndex}].Name" class="form-control" />
-                                </div>
-                                <div class="form-group">
-                                    <label>Quantity</label>
-                                    <input name="Ingredients[${ingredientIndex}].Quantity" type="number" step="0.01" class="form-control" />
-                                </div>
-                                <div class="form-group">
-                                    <label>Weight</label>
-                                    <input name="Ingredients[${ingredientIndex}].Weight" class="form-control" />
-                                </div>
-                            `;
+                <div class="form-group">
+                    <label>Ingredient Name</label>
+                    <input name="Ingredients[${ingredientIndex}].Name" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input name="Ingredients[${ingredientIndex}].Quantity" type="number" step="0.01" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label>Weight</label>
+                    <input name="Ingredients[${ingredientIndex}].Weight" class="form-control" required />
+                </div>
+                <hr />
+            `;
             container.insertAdjacentHTML('beforeend', ingredientHtml);
             ingredientIndex++;
         }
