@@ -4,22 +4,18 @@
     ViewData["Title"] = "Delete Meal Plan";
 }
 
-<h2>@ViewData["Title"]</h2>
+<h2>Delete Meal Plan</h2>
+<p>Are you sure you want to delete this meal plan?</p>
 
-<h3>Are you sure you want to delete this meal plan?</h3>
-
-<div>
-    <h4>Meal Plan @Model.Id</h4>
-    <ul>
-        @foreach (var entry in Model.Entries)
-        {
-            <li>@entry.Date.ToShortDateString() - @entry.MealType: @entry.Recipe.RecipeName</li>
-        }
-    </ul>
-</div>
+<ul>
+    @foreach (var entry in Model.Entries.OrderBy(e => e.Date))
+    {
+        <li>@entry.Date.ToShortDateString() - @entry.MealType: @entry.Recipe?.RecipeName ?? "Unknown Recipe"</li>
+    }
+</ul>
 
 <form asp-action="Delete" method="post">
-    <input type="hidden" asp-for="Id" />
+    <input type="hidden" name="Id" value="@Model.Id" />
     <button type="submit" class="btn btn-danger">Delete</button>
     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

@@ -27,7 +27,9 @@
             <th>Image</th>
             <th>Name</th>
             <th>Category</th>
+            <th>Added By</th>
             <th>Actions</th>
+            
         </tr>
     </thead>
     <tbody>
@@ -68,6 +70,19 @@
                             @item.Category
                         }
                     </td>
+
+
+                    <td>
+                        @if (string.IsNullOrEmpty(item.CreatedBy))
+                        {
+                            <span>Anonynous</span>
+                        }
+                        else
+                        {
+                            @item.CreatedBy
+                        }
+                    </td>
+
 
                     <!-- Action Buttons -->
                     <td>

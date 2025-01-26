@@ -1,0 +1,77 @@
+﻿@model IEnumerable<Licenta2.Models.ModelMealPlannerEntry>
+
+@{
+    ViewData["Title"] = $"Meal Planner for {ViewBag.Date}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Meal Planner for @ViewBag.Date</h1>
+
+
+<!-- Add Recipe Button -->
+<div class="mb-3">
+    <a asp-action="AddRecipe" asp-route-date="@ViewBag.Date" class="btn btn-primary">Add Recipe</a>
+</div>
+
+<!-- Recipes Table -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Meal Type</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center">No recipes added for this day.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <!-- Recipe Image -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(entry.Recipe?.ImagePath))
+                        {
+                            <img src="@entry.Recipe.ImagePath" alt="Recipe Image" style="max-height: 100px; max-width: 100px;" />
+                        }
+                        else
+                        {
+                            <span>No image</span>
+                        }
+                    </td>
+
+                    <!-- Meal Type -->
+                    <td>@entry.MealType</td>
+
+                    <!-- Recipe Name -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(entry.Recipe?.RecipeName))
+                        {
+                            @entry.Recipe.RecipeName
+                        }
+                        else
+                        {
+                            <span>Unknown Recipe</span>
+                        }
+                    </td>
+
+                    <!-- Action Buttons -->
+                    <td>
+                        <a asp-controller="Recipe" asp-action="Details" asp-route-id="@entry.Recipe?.RecipeId" class="btn btn-info btn-sm">Details</a>
+                        <form asp-action="DeleteEntry" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@entry.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

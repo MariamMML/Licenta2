@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Add Recipe";
+}
+
+<h2>Add Recipe for @ViewBag.Date</h2>
+
+<form asp-action="AddRecipe" method="post">
+    <input type="hidden" name="date" value="@ViewBag.Date.ToString("yyyy-MM-dd")" />
+
+    <!-- Search Bar -->
+    <div class="form-group">
+        <label for="search">Search Recipes</label>
+        <input type="text" id="search" name="search" class="form-control" placeholder="Search by name..." onkeyup="filterRecipes()" />
+    </div>
+
+    <!-- Recipe Dropdown -->
+    <div class="form-group">
+        <label for="recipeId">Select Recipe</label>
+        <select id="recipeId" name="recipeId" class="form-control" required>
+            <option value="">-- Select a Recipe --</option>
+            @foreach (var recipe in ViewBag.Recipes as List<Licenta2.Models.ModelRecipe>)
+            {
+                <option value="@recipe.RecipeId">@recipe.RecipeName</option>
+            }
+        </select>
+    </div>
+
+    <!-- Meal Type Dropdown -->
+    <div class="form-group">
+        <label for="mealType">Meal Type</label>
+        <select id="mealType" name="mealType" class="form-control" required>
+            <option value="">-- Select Meal Type --</option>
+            @foreach (var type in new List<string> { "Breakfast", "Lunch", "Diner", "Beverage", "Snack" })
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary">Add Recipe</button>
+</form>
+
+<script>
+    function filterRecipes() {
+        const query = document.getElementById('search').value.toLowerCase();
+        const recipes = document.querySelectorAll('#recipeId option');
+
+        recipes.forEach(option => {
+            const recipeName = option.textContent.toLowerCase();
+            option.style.display = recipeName.includes(query) || option.value === "" ? 'block' : 'none';
+        });
+    }
+</script>

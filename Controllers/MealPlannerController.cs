@@ -1,11 +1,8 @@
 ﻿using Licenta2.Data;
 using Licenta2.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Licenta2.Controllers
 {
@@ -21,165 +18,207 @@ namespace Licenta2.Controllers
         }
 
         // GET: MealPlanner
-        public async Task<IActionResult> Index()
+        // GET: MealPlanner
+        public async Task<IActionResult> Index(int? year, int? month)
         {
             var user = await _userManager.GetUserAsync(User);
-            var mealPlanners = _context.MealPlanner
-                .Include(mp => mp.Entries)
-                .ThenInclude(e => e.Recipe)
-                .Where(mp => mp.UserId == user.Id)
-                .ToList();
-            return View(mealPlanners);
-        }
 
-        // GET: MealPlanner/Create
-        public IActionResult Create()
-        {
-            ViewBag.Recipes = _context.Recipes.ToList();  // Pass recipes to the view for selection
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            // Determine the current year and month
+            var currentDate = DateTime.Now;
+            var selectedYear = year ?? currentDate.Year;
+            var selectedMonth = month ?? currentDate.Month;
+
+            // Get all meal entries for the user in the selected month
+            var mealEntries = await _context.ModelMealPlannerEntries
+                .Include(e => e.Recipe)
+                .Where(e => e.MealPlanner.UserId == user.Id &&
+                            e.Date.Year == selectedYear &&
+                            e.Date.Month == selectedMonth)
+                .ToListAsync();
+
+            // Pass necessary data to the view
+            ViewBag.SelectedYear = selectedYear;
+            ViewBag.SelectedMonth = selectedMonth;
+            ViewBag.MealEntries = mealEntries;
+
             return View();
         }
 
-        // POST: MealPlanner/Create
+
+
+
+
+        //..............................................................
+
+
+
+
+
+
+
+
+        // GET: MealPlanner/AddRecipe?date=yyyy-MM-dd
+        public async Task<IActionResult> AddRecipe(DateTime date)
+        {
+            ViewBag.Date = date;
+            ViewBag.Recipes = await _context.Recipes.ToListAsync(); // Pass all recipes
+            ViewBag.MealTypes = new List<string> { "Breakfast", "Lunch", "Dessert", "Beverage" }; // Predefined meal types
+            return View();
+        }
+
+
+
+        // POST: MealPlanner/AddRecipe
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(List<DateTime> dates, List<int> recipeIds, List<string> mealTypes)
+        public async Task<IActionResult> AddRecipe(DateTime date, int recipeId, string mealType)
         {
             var user = await _userManager.GetUserAsync(User);
 
-            if (dates.Count != recipeIds.Count || recipeIds.Count != mealTypes.Count)
+            if (user == null)
             {
-                ModelState.AddModelError("", "Mismatch in dates, recipes, or meal types.");
-                ViewBag.Recipes = _context.Recipes.ToList();
+                return Unauthorized();
+            }
+
+            // Validate input
+            if (recipeId <= 0 || string.IsNullOrEmpty(mealType))
+            {
+                ModelState.AddModelError("", "Invalid input. Please select a recipe and provide a meal type.");
+                ViewBag.Date = date;
+                ViewBag.Recipes = await _context.Recipes.ToListAsync();
                 return View();
             }
 
-            if (ModelState.IsValid)
-            {
-                var mealPlanner = new ModelMealPlanner
-                {
-                    UserId = user.Id,
-                    Entries = new List<ModelMealPlannerEntry>()
-                };
-
-                for (int i = 0; i < dates.Count; i++)
-                {
-                    mealPlanner.Entries.Add(new ModelMealPlannerEntry
-                    {
-                        RecipeId = recipeIds[i],
-                        Date = dates[i],
-                        MealType = mealTypes[i]
-                    });
-                }
-
-                _context.Add(mealPlanner);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewBag.Recipes = _context.Recipes.ToList();
-            return View();
-        }
-
-        // GET: MealPlanner/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var mealPlanner = _context.MealPlanner
-                .Include(mp => mp.Entries)
-                .FirstOrDefault(mp => mp.Id == id && mp.UserId == user.Id);
+            // Get or create a meal planner for the user
+            var mealPlanner = await _context.MealPlanner
+                .FirstOrDefaultAsync(mp => mp.UserId == user.Id);
 
             if (mealPlanner == null)
             {
-                return NotFound();
+                mealPlanner = new ModelMealPlanner
+                {
+                    UserId = user.Id
+                };
+                _context.MealPlanner.Add(mealPlanner);
+                await _context.SaveChangesAsync();
             }
 
-            ViewBag.Recipes = _context.Recipes.ToList();
-            return View(mealPlanner);
+            // Add the recipe to the meal planner for the specified date
+            var mealPlannerEntry = new ModelMealPlannerEntry
+            {
+                MealPlannerId = mealPlanner.Id,
+                RecipeId = recipeId,
+                Date = date,
+                MealType = mealType
+            };
+
+            _context.ModelMealPlannerEntries.Add(mealPlannerEntry);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("DayView", new { date = date.ToString("yyyy-MM-dd") });
         }
 
-        // POST: MealPlanner/Edit/5
+
+
+
+        //.............................................................. 
+
+
+
+        // GET: MealPlanner/DayView?date=yyyy-MM-dd
+        public async Task<IActionResult> DayView(DateTime date)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            // Get all entries for the specified day
+            var entries = await _context.ModelMealPlannerEntries
+                .Include(e => e.Recipe)
+                .Where(e => e.MealPlanner.UserId == user.Id && e.Date.Date == date.Date)
+                .ToListAsync();
+
+            ViewBag.Date = date;
+            return View(entries);
+        }
+
+
+        //..............................................................
+
+
+        // GET: MealPlanner/EditEntries?date=yyyy-MM-dd
+        public async Task<IActionResult> EditEntries(DateTime date)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            // Get all entries for the specified date
+            var entries = await _context.ModelMealPlannerEntries
+                .Include(e => e.Recipe)
+                .Where(e => e.MealPlanner.UserId == user.Id && e.Date.Date == date.Date)
+                .ToListAsync();
+
+            ViewBag.Date = date;
+            ViewBag.Recipes = await _context.Recipes.ToListAsync();
+            return View(entries);
+        }
+
+        // POST: MealPlanner/EditEntries
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id")] ModelMealPlanner mealPlanner, List<DateTime> dates, List<int> recipeIds, List<string> mealTypes)
+        public async Task<IActionResult> EditEntries(DateTime date, List<int> entryIds, List<int> recipeIds, List<string> mealTypes)
         {
-            if (id != mealPlanner.Id)
-            {
-                return NotFound();
-            }
-
             var user = await _userManager.GetUserAsync(User);
-            var existingPlanner = _context.MealPlanner
-                .Include(mp => mp.Entries)
-                .FirstOrDefault(mp => mp.Id == id && mp.UserId == user.Id);
 
-            if (existingPlanner == null)
+            // Validate the input
+            if (entryIds.Count != recipeIds.Count || recipeIds.Count != mealTypes.Count)
             {
-                return NotFound();
+                ModelState.AddModelError("", "Invalid input data.");
+                return RedirectToAction(nameof(EditEntries), new { date });
             }
 
-            if (dates.Count != recipeIds.Count || recipeIds.Count != mealTypes.Count)
+            // Update existing entries
+            for (int i = 0; i < entryIds.Count; i++)
             {
-                ModelState.AddModelError("", "Mismatch in dates, recipes, or meal types.");
-                ViewBag.Recipes = _context.Recipes.ToList();
-                return View(mealPlanner);
-            }
+                var entry = await _context.ModelMealPlannerEntries
+                    .FirstOrDefaultAsync(e => e.Id == entryIds[i] && e.MealPlanner.UserId == user.Id);
 
-            if (ModelState.IsValid)
-            {
-                // Clear existing entries
-                _context.ModelMealPlannerEntries.RemoveRange(existingPlanner.Entries);
-
-                // Add updated entries
-                for (int i = 0; i < dates.Count; i++)
+                if (entry != null)
                 {
-                    existingPlanner.Entries.Add(new ModelMealPlannerEntry
-                    {
-                        RecipeId = recipeIds[i],
-                        Date = dates[i],
-                        MealType = mealTypes[i]
-                    });
+                    entry.RecipeId = recipeIds[i];
+                    entry.MealType = mealTypes[i];
                 }
-
-                _context.Update(existingPlanner);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Recipes = _context.Recipes.ToList();
-            return View(mealPlanner);
-        }
-
-        // GET: MealPlanner/Delete/5
-        public async Task<IActionResult> Delete(int id)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var mealPlanner = _context.MealPlanner
-                .FirstOrDefault(mp => mp.Id == id && mp.UserId == user.Id);
-
-            if (mealPlanner == null)
-            {
-                return NotFound();
-            }
-
-            return View(mealPlanner);
-        }
-
-        // POST: MealPlanner/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var mealPlanner = _context.MealPlanner
-                .FirstOrDefault(mp => mp.Id == id && mp.UserId == user.Id);
-
-            if (mealPlanner == null)
-            {
-                return NotFound();
-            }
-
-            _context.MealPlanner.Remove(mealPlanner);
             await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: MealPlanner/DeleteEntry/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteEntry(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var entry = await _context.ModelMealPlannerEntries
+                .FirstOrDefaultAsync(e => e.Id == id && e.MealPlanner.UserId == user.Id);
+
+            if (entry == null)
+            {
+                return NotFound();
+            }
+
+            _context.ModelMealPlannerEntries.Remove(entry);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
     }

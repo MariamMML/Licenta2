@@ -5,12 +5,14 @@ using Licenta2.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace Licenta2.Controllers
 {
     public class RecipeController: Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ModelUser> _userManager;
 
         public RecipeController(ApplicationDbContext context)
         {
@@ -193,16 +195,16 @@ namespace Licenta2.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Edit(int id, [Bind("RecipeId,RecipeName,Instructions,Ingredients,Category,ImagePath,CreatedBy")] ModelRecipe recipe, IFormFile imageFile)
+        public async Task<IActionResult> Edit(
+    int id,
+    [Bind("RecipeId,RecipeName,Instructions,Ingredients,Category,ImagePath,CreatedBy")] ModelRecipe recipe,
+    IFormFile imageFile)
         {
             if (id != recipe.RecipeId)
             {
                 return NotFound();
             }
-            if (!ModelState.IsValid)
-            {
-                return View(recipe); // Return view with validation errors
-            }
+
 
             // Retrieve the existing recipe from the database
             var existingRecipe = await _context.Recipes
@@ -213,12 +215,28 @@ namespace Licenta2.Controllers
             {
                 return NotFound();
             }
+            // Check if the user is authorized to edit
+            var isAdmin = User.IsInRole("Administrator");
+            var isOwner = existingRecipe.CreatedBy == User.Identity.Name;
+
+            if (!isOwner && !isAdmin)
+            {
+                return Forbid(); // Return 403 Forbidden if the user is not authorized
+            }
+
+            ModelState.Remove("imageFile");
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Categories = HardcodedCategories; // Ensure dropdown is repopulated
+                return View(recipe); // Return view with validation errors
+            }
 
             // Update the recipe details
             existingRecipe.RecipeName = recipe.RecipeName;
             existingRecipe.Instructions = recipe.Instructions;
+            existingRecipe.Category = recipe.Category;
 
-            // Handle image replacement
+            // Handle optional image replacement
             if (imageFile != null && imageFile.Length > 0)
             {
                 // Save the new image
@@ -247,7 +265,7 @@ namespace Licenta2.Controllers
 
             // Update ingredients
             _context.Ingredients.RemoveRange(existingRecipe.Ingredients); // Remove old ingredients
-            if (recipe.Ingredients != null)
+            if (recipe.Ingredients != null && recipe.Ingredients.Any())
             {
                 foreach (var ingredient in recipe.Ingredients)
                 {
@@ -280,6 +298,82 @@ namespace Licenta2.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: MealPlanner/DayView?date=yyyy-MM-dd
+        public async Task<IActionResult> DayView(DateTime date)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            // Get all recipes for the specified day
+            var entries = await _context.ModelMealPlannerEntries
+                .Include(e => e.Recipe)
+                .Where(e => e.MealPlanner.UserId == user.Id && e.Date.Date == date.Date)
+                .ToListAsync();
+
+            ViewBag.Date = date;
+            return View(entries);
+        }
+
+        // GET: MealPlanner/AddRecipe?date=yyyy-MM-dd
+        public async Task<IActionResult> AddRecipe(DateTime date)
+        {
+            ViewBag.Date = date;
+            return View();
+        }
+
+        // POST: MealPlanner/AddRecipe
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddRecipe(DateTime date, string recipeName)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            // Find the recipe by name
+            var recipe = await _context.Recipes.FirstOrDefaultAsync(r => r.RecipeName == recipeName);
+
+            if (recipe == null)
+            {
+                ModelState.AddModelError("", "Recipe not found.");
+                ViewBag.Date = date;
+                return View();
+            }
+
+            // Get or create a meal planner for the user
+            var mealPlanner = await _context.MealPlanner
+                .FirstOrDefaultAsync(mp => mp.UserId == user.Id);
+
+            if (mealPlanner == null)
+            {
+                mealPlanner = new ModelMealPlanner { UserId = user.Id };
+                _context.MealPlanner.Add(mealPlanner);
+                await _context.SaveChangesAsync();
+            }
+
+            // Add the recipe to the day
+            var mealPlannerEntry = new ModelMealPlannerEntry
+            {
+                MealPlannerId = mealPlanner.Id,
+                RecipeId = recipe.RecipeId,
+                Date = date,
+                MealType = "Any" // Default meal type
+            };
+
+            _context.ModelMealPlannerEntries.Add(mealPlannerEntry);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("DayView", new { date = date.ToString("yyyy-MM-dd") });
+        }
+
 
 
         public async Task<IActionResult> Details(int id)
