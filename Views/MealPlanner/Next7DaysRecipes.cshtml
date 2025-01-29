@@ -1,0 +1,50 @@
+﻿@model IEnumerable<Licenta2.Models.ModelMealPlannerEntry>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Next 7 Days Recipes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>Recipes for the Next 7 Days</h1>
+
+    @if (!Model.Any())
+    {
+        <p>No recipes planned for the next 7 days.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Recipe Name</th>
+                    <th>Category</th>
+                    <th>Created By</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model)
+                {
+                    <tr>
+                        <td>@entry.Date.ToString("yyyy-MM-dd")</td>
+                        <td>@entry.Recipe.RecipeName</td>
+                        <td>@entry.Recipe.Category</td>
+                        <td>@entry.Recipe.CreatedBy</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <footer style="text-align: center; margin-top: 20px;">
+        © 2023 - ProCook
+    </footer>
+</body>
+</html>

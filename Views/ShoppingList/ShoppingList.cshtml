@@ -1,0 +1,55 @@
+﻿@model IEnumerable<dynamic>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Ingredient</th>
+                <th>Total Quantity</th>
+                <th>Weight in grams</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.TotalQuantity</td>
+                    <td>@item.TotalWeight</td> <!-- ✅ Fixed: Use TotalWeight instead of Weight -->
+                </tr>
+            }
+        </tbody>
+    </table>
+    <footer style="text-align: center; margin-top: 20px;">
+        © 2023 - ProCook
+    </footer>
+</body>
+</html>

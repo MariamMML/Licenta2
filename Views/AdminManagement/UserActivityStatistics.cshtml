@@ -1,0 +1,30 @@
+﻿@model IEnumerable<dynamic>
+
+<h1>User Activity Statistics</h1>
+
+@if (!Model.Any())
+{
+    <p>No users have added recipes yet.</p>
+}
+else
+{
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>User Email</th>
+                <th>Recipes Added</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.RecipeCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-action="Index" asp-controller="AdminManagement" class="btn btn-primary mt-3">Back to User Management</a>

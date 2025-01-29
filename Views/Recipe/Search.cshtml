@@ -4,15 +4,19 @@
     ViewData["Title"] = "Search Results";
 }
 
-<h2>Search Results</h2>
+<h2 class="mb-4">Search Results</h2>
 
-<form asp-action="Search" method="get">
-    <input type="text" name="query" value="@ViewData["CurrentFilter"]" />
-    <button type="submit">Search</button>
+<!-- Search Form -->
+<form asp-action="Search" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="query" value="@ViewData["CurrentFilter"]" placeholder="Search for recipes..." class="form-control" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
 </form>
 
-<table class="table">
-    <thead>
+<!-- Recipes Table -->
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
         <tr>
             <th>Recipe Name</th>
             <th>Description</th>
@@ -20,15 +24,26 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var recipe in Model)
+        @if (!Model.Any())
         {
             <tr>
-                <td>@recipe.RecipeName</td>
-                <td>@recipe.Instructions</td>
-                <td>
-                    <a asp-controller="Recipe" asp-action="Details" asp-route-id="@recipe.RecipeId">View</a>
-                </td>
+                <td colspan="3" class="text-center text-muted">No recipes found. Try searching for something else.</td>
             </tr>
+        }
+        else
+        {
+            @foreach (var recipe in Model)
+            {
+                <tr>
+                    <td class="align-middle">@recipe.RecipeName</td>
+                    <td class="align-middle text-truncate" style="max-width: 300px;">@recipe.Instructions</td>
+                    <td class="align-middle">
+                        <a asp-controller="Recipe" asp-action="Details" asp-route-id="@recipe.RecipeId" class="btn btn-info btn-sm">View</a>
+                        <a asp-controller="Recipe" asp-action="Edit" asp-route-id="@recipe.RecipeId" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-controller="Recipe" asp-action="Delete" asp-route-id="@recipe.RecipeId" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

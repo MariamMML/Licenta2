@@ -1,0 +1,47 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Recipe Statistics";
+}
+
+<h1>Recipe Statistics</h1>
+
+@if (Model != null && Model.Any())
+{
+    <p><strong>Most Popular Ingredient:</strong> @ViewBag.MostPopularIngredient?.Ingredient (@ViewBag.MostPopularIngredient?.Count uses)</p>
+
+    <!-- Canvas for the Chart -->
+    <canvas id="ingredientChart" width="400" height="200"></canvas>
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('ingredientChart').getContext('2d');
+
+        var ingredientChart = new Chart(ctx, {
+            type: 'bar', // Use a bar chart
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Select(i => i.Ingredient))), // Ingredient Names
+                datasets: [{
+                    label: 'Usage Count',
+                    data: @Html.Raw(Json.Serialize(Model.Select(i => i.Count))), // Ingredient Counts
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}
+else
+{
+    <p class="text-muted">No ingredient statistics available.</p>
+}

@@ -130,6 +130,32 @@ namespace Licenta2.Controllers
 
 
 
+        public IActionResult Next7DaysRecipes()
+        {
+            var user = _userManager.GetUserAsync(User).Result;
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var startDate = DateTime.Today;
+            var endDate = startDate.AddDays(7);
+
+            // Fetch meal planner entries for the next 7 days for the logged-in user
+            var mealPlannerEntries = _context.ModelMealPlannerEntries
+                .Where(entry => entry.MealPlanner.UserId == user.Id && entry.Date >= startDate && entry.Date <= endDate)
+                .Include(entry => entry.Recipe) // Ensure recipes are loaded
+                .ToList();
+
+            return View("Next7DaysRecipes", mealPlannerEntries);
+        }
+
+
+        //.............................................................. 
+
+
+
         // GET: MealPlanner/DayView?date=yyyy-MM-dd
         public async Task<IActionResult> DayView(DateTime date)
         {
@@ -170,36 +196,36 @@ namespace Licenta2.Controllers
             return View(entries);
         }
 
-        // POST: MealPlanner/EditEntries
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditEntries(DateTime date, List<int> entryIds, List<int> recipeIds, List<string> mealTypes)
-        {
-            var user = await _userManager.GetUserAsync(User);
+        //// POST: MealPlanner/EditEntries
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> EditEntries(DateTime date, List<int> entryIds, List<int> recipeIds, List<string> mealTypes)
+        //{
+        //    var user = await _userManager.GetUserAsync(User);
 
-            // Validate the input
-            if (entryIds.Count != recipeIds.Count || recipeIds.Count != mealTypes.Count)
-            {
-                ModelState.AddModelError("", "Invalid input data.");
-                return RedirectToAction(nameof(EditEntries), new { date });
-            }
+        //    // Validate the input
+        //    if (entryIds.Count != recipeIds.Count || recipeIds.Count != mealTypes.Count)
+        //    {
+        //        ModelState.AddModelError("", "Invalid input data.");
+        //        return RedirectToAction(nameof(EditEntries), new { date });
+        //    }
 
-            // Update existing entries
-            for (int i = 0; i < entryIds.Count; i++)
-            {
-                var entry = await _context.ModelMealPlannerEntries
-                    .FirstOrDefaultAsync(e => e.Id == entryIds[i] && e.MealPlanner.UserId == user.Id);
+        //    // Update existing entries
+        //    for (int i = 0; i < entryIds.Count; i++)
+        //    {
+        //        var entry = await _context.ModelMealPlannerEntries
+        //            .FirstOrDefaultAsync(e => e.Id == entryIds[i] && e.MealPlanner.UserId == user.Id);
 
-                if (entry != null)
-                {
-                    entry.RecipeId = recipeIds[i];
-                    entry.MealType = mealTypes[i];
-                }
-            }
+        //        if (entry != null)
+        //        {
+        //            entry.RecipeId = recipeIds[i];
+        //            entry.MealType = mealTypes[i];
+        //        }
+        //    }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         // POST: MealPlanner/DeleteEntry/5
         [HttpPost]

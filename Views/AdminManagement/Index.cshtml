@@ -2,7 +2,22 @@
 
 <h1>Manage Users</h1>
 
-<table class="table table-striped">
+<!-- Button to Redirect to Recipe Statistics -->
+<!-- Buttons for Recipe & User Activity Statistics -->
+<div class="mt-4">
+    <a asp-action="RecipeStatistics" asp-controller="AdminManagement" class="btn btn-info">
+        View Recipe Statistics
+    </a>
+
+    <a asp-action="UserActivityStatistics" asp-controller="AdminManagement" class="btn btn-success ms-3">
+        View User Activity Statistics
+    </a>
+</div>
+
+
+
+<!-- User Management Table -->
+<table class="table table-striped mt-5">
     <thead>
         <tr>
             <th>Email</th>

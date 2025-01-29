@@ -1,7 +1,9 @@
-﻿using Licenta2.Models;
+﻿using Licenta2.Data;
+using Licenta2.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Licenta2.Controllers
 {
@@ -10,11 +12,13 @@ namespace Licenta2.Controllers
     {
         private readonly UserManager<ModelUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
 
-        public AdminManagementController(UserManager<ModelUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminManagementController(UserManager<ModelUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
         }
 
         // Display all users
@@ -61,5 +65,44 @@ namespace Licenta2.Controllers
 
             return RedirectToAction("Index");
         }
+
+
+
+        public IActionResult RecipeStatistics()
+        {
+            var ingredientCounts = _context.Recipes
+                .Include(r => r.Ingredients)
+                .SelectMany(r => r.Ingredients)
+                .GroupBy(i => i.Name)
+                .Select(g => new
+                {
+                    Ingredient = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(g => g.Count)
+                .ToList();
+
+            ViewBag.MostPopularIngredient = ingredientCounts.FirstOrDefault();
+            return View(ingredientCounts);
+        }
+
+
+        public IActionResult UserActivityStatistics()
+        {
+            // Fetch users with the number of recipes they created
+            var userActivity = _context.Users
+                .Select(user => new
+                {
+                    UserName = user.Email,
+                    RecipeCount = _context.Recipes.Count(r => r.CreatedBy == user.Email) // Count recipes by user
+                })
+                .OrderByDescending(u => u.RecipeCount) // Sort by highest number of recipes
+                .ToList();
+
+            return View("UserActivityStatistics", userActivity);
+        }
+
+
     }
 }
+

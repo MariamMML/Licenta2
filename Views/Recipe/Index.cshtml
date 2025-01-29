@@ -10,7 +10,7 @@
 <!-- Search Form -->
 <form asp-action="Search" method="get" class="mb-3">
     <div class="input-group">
-        <input type="text" name="searchTerm" placeholder="Search recipes..." class="form-control" />
+        <input type="text" name="query" placeholder="Search recipes..." class="form-control" />
         <button type="submit" class="btn btn-primary">Search</button>
     </div>
 </form>
@@ -86,7 +86,10 @@
 
                     <!-- Action Buttons -->
                     <td>
-                        <a asp-action="Edit" asp-route-id="@item.RecipeId" class="btn btn-warning btn-sm">Edit</a>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.RecipeId" class="btn btn-warning btn-sm">Edit</a>
+                        }
                         <a asp-action="Details" asp-route-id="@item.RecipeId" class="btn btn-info btn-sm">Details</a>
                         <a asp-action="Delete" asp-route-id="@item.RecipeId" class="btn btn-danger btn-sm">Delete</a>
                     </td>
