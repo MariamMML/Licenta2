@@ -5,6 +5,18 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/site.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background: url('/images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9); /* Add semi-transparent white background for readability */
+            border-radius: 8px;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -12,9 +24,9 @@
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                 <img src="/images/logo.png" alt="YourAppName Logo" class="d-inline-block align-text-top" style="height: 40px; width: auto;">
-                <B>ProCook</B>
+                <b>ProCook</b>
             </a>
-           
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -35,7 +47,7 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="MealPlanner" asp-action="Index">Meal Planners</a>
                         </li>
-                       
+
                         <li class="nav-item">
                             <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" style="display:inline;">
                                 <a href="javascript:void(0);" class="nav-link" onclick="document.getElementById('logoutForm').submit();">Logout</a>
@@ -72,7 +84,7 @@
 
     <!-- Footer -->
     <footer class="bg-light text-center py-3">
-        <p>&copy; 2023 - <strong>ProCook</strong></p>
+        <p>&copy; 2025 - <strong>ProCook</strong></p>
     </footer>
 
     <!-- Scripts -->

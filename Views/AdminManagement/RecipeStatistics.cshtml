@@ -10,8 +10,10 @@
 {
     <p><strong>Most Popular Ingredient:</strong> @ViewBag.MostPopularIngredient?.Ingredient (@ViewBag.MostPopularIngredient?.Count uses)</p>
 
-    <!-- Canvas for the Chart -->
-    <canvas id="ingredientChart" width="400" height="200"></canvas>
+    <!-- Scrollable Container for the Chart -->
+    <div style="overflow-x: auto; max-width: 100%; white-space: nowrap;">
+        <canvas id="ingredientChart" width="800" height="400"></canvas>
+    </div>
 
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,9 +34,15 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: false
+                        }
                     }
                 }
             }

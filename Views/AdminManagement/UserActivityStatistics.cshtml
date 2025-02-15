@@ -2,29 +2,69 @@
 
 <h1>User Activity Statistics</h1>
 
-@if (!Model.Any())
+@if (Model != null && Model.Any())
 {
-    <p>No users have added recipes yet.</p>
+    <!-- Display most active user -->
+    <p><strong>Most Active User:</strong> @ViewBag.MostActiveUser?.UserName (@ViewBag.MostActiveUser?.RecipeCount recipes added)</p>
+
+    <!-- Canvas for the Chart -->
+    <div style="overflow-x: auto; max-width: 100%; white-space: nowrap;">
+        <canvas id="userActivityChart" width="800" height="400"></canvas>
+    </div>
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('userActivityChart').getContext('2d');
+
+        var userLabels = @Html.Raw(Json.Serialize(Model.Select(u => u.UserName)));
+        var userData = @Html.Raw(Json.Serialize(Model.Select(u => u.RecipeCount)));
+
+        var userActivityChart = new Chart(ctx, {
+            type: 'bar', // Use a bar chart
+            data: {
+                labels: userLabels, // User Emails
+                datasets: [{
+                    label: 'Recipes Added',
+                    data: userData, // Recipes Count
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: false
+                        }
+                    }
+                },
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function (value, context) {
+                            return value;
+                        },
+                        color: '#000'
+                    }
+                }
+            }
+        });
+    </script>
+
+    <!-- Include Chart.js Plugin for Data Labels -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 }
 else
 {
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-                <th>User Email</th>
-                <th>Recipes Added</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td>@user.UserName</td>
-                    <td>@user.RecipeCount</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <p class="text-muted">No users have added recipes yet.</p>
 }
 
 <a asp-action="Index" asp-controller="AdminManagement" class="btn btn-primary mt-3">Back to User Management</a>
